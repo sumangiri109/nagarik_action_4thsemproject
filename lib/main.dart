@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nagarik_action_4thsemproject/sign_up';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const SignUpPage(),
     );
   }
 }
@@ -116,12 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
-// teest
-//test 2
-//test 3  
-//pull request test
-//first test by saugat
