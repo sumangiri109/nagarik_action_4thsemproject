@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:nagarik_action_4thsemproject/landing_page.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -22,9 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.orange),
 
       // Initial page (change later if needed)
-      // home: const LandingPage(),
+      home: LandingPage(),
     );
   }
 }
-
- 
