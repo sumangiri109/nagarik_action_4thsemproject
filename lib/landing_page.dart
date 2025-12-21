@@ -15,11 +15,11 @@ class _LandingPageState extends State<LandingPage> {
   bool _isScrollingForward = true;
 
   final List<Map<String, String>> reportCards = [
-    {'image': 'assets/images/photo1.png', 'label': 'Problem Name, Location'},
-    {'image': 'assets/images/photo2.png', 'label': 'Problem Name, Location'},
-    {'image': 'assets/images/photo3.png', 'label': 'Problem Name, Location'},
-    {'image': 'assets/images/photo4.jpg', 'label': 'Problem Name, Location'},
-    {'image': 'assets/images/photo5.jpg', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo1.png', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo2.png', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo3.png', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo4.jpg', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo5.jpg', 'label': 'Problem Name, Location'},
   ];
 
   @override
@@ -91,14 +91,17 @@ class _LandingPageState extends State<LandingPage> {
       children: [
         // Hero Background Image - Full Screen Height
         Container(
+          //   color: Colors.black.withOpacity(0.4),
           height: MediaQuery.of(context).size.height,
           width: double.infinity,
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/images/photo1.png'),
+              image: AssetImage('images/photo1.png'),
               fit: BoxFit.cover,
+              // alignment: Alignment.topLeft,
             ),
           ),
+
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
