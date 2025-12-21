@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "652597646828",
+    "project_id": "nagarik-action",
+    "storage_bucket": "nagarik-action.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652597646828:android:8cbe2894da6bf23b79dcc9",
+        "android_client_info": {
+          "package_name": "com.example.nagarik_action_4thsemproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMszGiQZajgpT5VZfjR189UnuF7cTh6cY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
