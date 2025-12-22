@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'signup_page.dart';
 import 'dart:async';
 
 class LandingPage extends StatefulWidget {
@@ -19,7 +20,7 @@ class _LandingPageState extends State<LandingPage> {
     {'image': 'images/photo2.png', 'label': 'Problem Name, Location'},
     {'image': 'images/photo3.png', 'label': 'Problem Name, Location'},
     {'image': 'images/photo4.jpg', 'label': 'Problem Name, Location'},
-    {'image': 'images/photo5.jpg', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo5.jpeg', 'label': 'Problem Name, Location'},
   ];
 
   @override
@@ -173,7 +174,7 @@ class _LandingPageState extends State<LandingPage> {
   // Transparent AppBar with Enhanced Visibility
   Widget _buildTransparentAppBar(BuildContext context) {
     return Container(
-      height: 65,
+      height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 25),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -193,7 +194,12 @@ class _LandingPageState extends State<LandingPage> {
           const SizedBox(width: 25),
           _buildNavButton('Contact Us', () {}),
           const SizedBox(width: 25),
-          _buildNavButton('Sign Up', () {}),
+         _buildNavButton('Sign Up', () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => NagarikSignUpPage()),
+  );
+}),
         ],
       ),
     );
@@ -201,10 +207,10 @@ class _LandingPageState extends State<LandingPage> {
 
   Widget _buildLogo() {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(8),
       child: Image.asset(
-        'assets/images/logo.png',
-        height: 40,
+        'assets/images/logo1.png',
+        height: 60,
         fit: BoxFit.contain,
       ),
     );
@@ -304,109 +310,46 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _buildCallToActionSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 35),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Want to become a Change?',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 15),
-          const Text(
-            'Here is Nagarik action, the platform where you can report the problem in community so that government can take actions.',
-            style: TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          HoverScaleButton(
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 34,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Report Now',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticsSection(BuildContext context) {
-    return Container(
-      height: 280,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/statistics_background.jpg'),
-          fit: BoxFit.cover,
-        ),
-      ),
+    return Align(
+      alignment: Alignment.centerLeft,
       child: Container(
-        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6)),
         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 35),
+        color: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'Nagarik Action by the Numbers.',
+          children: [
+            const Text(
+              'Want to become a Change?',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            SizedBox(height: 24),
-            Text(
-              'Kathmandu',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-              ),
+            const SizedBox(height: 15),
+            const Text(
+              'Here is Nagarik action, the platform where you can report the problem in community so that government can take actions.',
+              style: TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
             ),
-            SizedBox(height: 12),
-            Text(
-              'Pokhara',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Bhaktapur',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Lalitpur',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
+            const SizedBox(height: 24),
+            HoverScaleButton(
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 34,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Report Now',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -415,6 +358,40 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
+ // ✅ FIXED OVERFLOW HERE (ONLY CHANGE)
+  Widget _buildStatisticsSection(BuildContext context) {
+    return Container(
+      height: 256,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/photo3.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6)),
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 35),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text('Nagarik Action by the Numbers.',
+                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+              SizedBox(height: 24),
+              Text('Kathmandu', style: TextStyle(color: Colors.white, fontSize: 22)),
+              SizedBox(height: 12),
+              Text('Pokhara', style: TextStyle(color: Colors.white, fontSize: 22)),
+              SizedBox(height: 12),
+              Text('Bhaktapur', style: TextStyle(color: Colors.white, fontSize: 22)),
+              SizedBox(height: 12),
+              Text('Lalitpur', style: TextStyle(color: Colors.white, fontSize: 22)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
   Widget _buildFooter(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 38, horizontal: 35),
