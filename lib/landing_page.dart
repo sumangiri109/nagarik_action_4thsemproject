@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nagarik_action_4thsemproject/contact_us.dart';
 import 'signup_page.dart';
+//import 'contact_us.dart';
 import 'dart:async';
 
 class LandingPage extends StatefulWidget {
@@ -19,8 +21,8 @@ class _LandingPageState extends State<LandingPage> {
     {'image': 'images/photo1.png', 'label': 'Problem Name, Location'},
     {'image': 'images/photo2.png', 'label': 'Problem Name, Location'},
     {'image': 'images/photo3.png', 'label': 'Problem Name, Location'},
-    {'image': 'images/photo4.jpg', 'label': 'Problem Name, Location'},
-    {'image': 'images/photo5.jpeg', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo4.png', 'label': 'Problem Name, Location'},
+    {'image': 'images/photo5.png', 'label': 'Problem Name, Location'},
   ];
 
   @override
@@ -195,7 +197,7 @@ class _LandingPageState extends State<LandingPage> {
           _buildNavButton('Contact Us', () {
             Navigator.push(
     context,
-    MaterialPageRoute(builder: (context) => NagarikSignUpPage()),
+    MaterialPageRoute(builder: (context) => ContactPage()),
   );
           }),
           const SizedBox(width: 25),
