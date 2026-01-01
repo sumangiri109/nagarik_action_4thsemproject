@@ -192,12 +192,7 @@ class _LandingPageState extends State<LandingPage> {
           // Navigation Buttons - Plain Text with Hover
           _buildNavButton('Reports', () {}),
           const SizedBox(width: 25),
-          _buildNavButton('Contact Us', () {
-            Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => NagarikSignUpPage()),
-  );
-          }),
+          _buildNavButton('Contact Us', () {}),
           const SizedBox(width: 25),
          _buildNavButton('Sign Up', () {
   Navigator.push(
