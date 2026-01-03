@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nagarik_action_4thsemproject/screens/login_page.dart';
 
 import 'screens/contact_us.dart';
 import 'screens/signup_page.dart';
@@ -202,14 +203,10 @@ class _LandingPageState extends State<LandingPage> {
             );
           }),
           const SizedBox(width: 25),
-          _buildNavButton('Sign Up', () {
+          _buildNavButton('Get Started', () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => NagarikSignUpPage(
-                  firebaseUser: FirebaseAuth.instance.currentUser!,
-                ),
-              ),
+              MaterialPageRoute(builder: (_) => NagarikLoginPage()),
             );
           }),
         ],
