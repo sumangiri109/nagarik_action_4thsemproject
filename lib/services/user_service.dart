@@ -1,7 +1,7 @@
 // lib/services/user_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_model.dart';
+import 'package:nagarik_action_4thsemproject/models/user_models.dart';
 import '../models/enums.dart';
 import '../models/location_model.dart';
 import '../models/government_details_model.dart';

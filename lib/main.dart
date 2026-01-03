@@ -23,6 +23,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.orange),
 
       // Initial page (change later if needed)
+
+      
       home: LandingPage(),
     );
   }
