@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'signup_page.dart'; // import your signup page file
+import '../screens/signup_page.dart';
+import '../services/auth_service.dart';
 
 class NagarikLoginPage extends StatefulWidget {
   const NagarikLoginPage({super.key});
@@ -12,10 +12,73 @@ class NagarikLoginPage extends StatefulWidget {
 }
 
 class _NagarikLoginPageState extends State<NagarikLoginPage> {
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
-  bool _remember = true;
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  // Google Sign-in handler
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Sign in with Google
+      final user = await _authService.signInWithGoogle();
+
+      if (user == null) {
+        // User cancelled sign-in
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check if user document exists
+      final userExists = await _authService.checkUserExists(user.uid);
+
+      if (userExists) {
+        // User already has profile - get user data and navigate to home
+        final userData = await _authService.getUserData(user.uid);
+        
+        if (mounted) {
+          // TODO: Navigate to home screen based on user role
+          // For now, just show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Welcome back, ${userData?.name}!')),
+          );
+          
+          // Navigate to appropriate home screen based on role
+          // if (userData?.role == UserRole.citizen) {
+          //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => CitizenHomeScreen()));
+          // } else if (userData?.role == UserRole.government) {
+          //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => GovernmentHomeScreen()));
+          // }
+        }
+      } else {
+        // New user - navigate to signup page
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NagarikSignUpPage(firebaseUser: user),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +129,7 @@ class _NagarikLoginPageState extends State<NagarikLoginPage> {
                             filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                             child: Container(
                               width: 450,
-                              height: 500, // a bit taller to fit social buttons
+                              height: 400,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 22, vertical: 16),
                               decoration: BoxDecoration(
@@ -79,6 +142,7 @@ class _NagarikLoginPageState extends State<NagarikLoginPage> {
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Row(
                                     children: [
@@ -98,160 +162,87 @@ class _NagarikLoginPageState extends State<NagarikLoginPage> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'Email address or user name',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _inputField(
-                                    controller: _emailCtrl,
-                                    hint: 'Enter email or username',
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Password',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _inputField(
-                                    controller: _passwordCtrl,
-                                    hint: 'Enter password',
-                                    obscure: _obscure,
-                                    suffix: IconButton(
-                                      icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        size: 16,
-                                        color: Colors.grey,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      onPressed: () {
-                                        setState(() => _obscure = !_obscure);
-                                      },
+                                  const SizedBox(height: 16),
+                                  
+                                  // Welcome message
+                                  Text(
+                                    'Welcome to Nagarik Action',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      Checkbox(
-                                        value: _remember,
-                                        visualDensity: VisualDensity.compact,
-                                        activeColor: Colors.black87,
-                                        onChanged: (v) {
-                                          setState(
-                                            () => _remember = v ?? false,
-                                          );
-                                        },
-                                      ),
-                                      const Text(
-                                        'Remember me',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Sign in with your Google account to continue',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black.withOpacity(0.7),
+                                    ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'By continuing, you agree to the Terms of use and Privacy Policy.',
-                                    style: TextStyle(fontSize: 10.5),
-                                  ),
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 32),
+                                  
+                                  // Google Sign-in Button
                                   SizedBox(
                                     width: double.infinity,
-                                    height: 42,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        // TODO: handle login
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFFE1D7D7),
-                                        foregroundColor: Colors.black87,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(24),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: const Text(
-                                        'Log in',
+                                    height: 50,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _isLoading ? null : _signInWithGoogle,
+                                      icon: _isLoading
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.black87,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.g_mobiledata,
+                                              size: 28,
+                                              color: Color(0xFFDB4437),
+                                            ),
+                                      label: Text(
+                                        _isLoading ? 'Signing in...' : 'Continue with Google',
                                         style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.black87,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                        elevation: 0,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  
+                                  const SizedBox(height: 20),
+                                  
+                                  // Terms and Privacy
                                   Center(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        // TODO: forgot password
-                                      },
-                                      style: TextButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                      child: const Text(
-                                        'Forget your password',
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: Colors.black87,
-                                          decoration:
-                                              TextDecoration.underline,
-                                        ),
+                                    child: Text(
+                                      'By continuing, you agree to our\nTerms of use and Privacy Policy.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.black.withOpacity(0.7),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  // Divider with "Or continue with"
-                                  Row(
-                                    children: const [
-                                      Expanded(
-                                          child: Divider(
-                                              color: Colors.black54)),
-                                      Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 8.0),
-                                        child: Text(
-                                          'Or continue with',
-                                          style: TextStyle(
-                                              fontSize: 11.5,
-                                              color: Colors.black87),
-                                        ),
-                                      ),
-                                      Expanded(
-                                          child: Divider(
-                                              color: Colors.black54)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  // Social buttons row
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      _socialIcon(
-                                        icon: Icons.facebook,
-                                        color: const Color(0xFF1877F2),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      _socialIcon(
-                                        icon: Icons.apple,
-                                        color: Colors.black,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      _socialIcon(
-                                        icon: Icons.g_mobiledata,
-                                        color: const Color(0xFFDB4437),
-                                      ),
-                                    ],
-                                  ),
+                                  
                                   const Spacer(),
+                                  
+                                  // Sign up link
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       const Text(
-                                        'Don\'t have an account? ',
+                                        'New to Nagarik Action? ',
                                         style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.black87),
@@ -259,22 +250,25 @@ class _NagarikLoginPageState extends State<NagarikLoginPage> {
                                       MouseRegion(
                                         cursor: SystemMouseCursors.click,
                                         child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const NagarikSignUpPage(),
-                                              ),
-                                            );
+                                          onTap: _isLoading ? null : () async {
+                                            // Sign in with Google first, then go to signup
+                                            final user = await _authService.signInWithGoogle();
+                                            if (user != null && mounted) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => NagarikSignUpPage(firebaseUser: user),
+                                                ),
+                                              );
+                                            }
                                           },
                                           child: const Text(
                                             'Sign up',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.black87,
-                                              decoration:
-                                                  TextDecoration.underline,
+                                              fontWeight: FontWeight.w600,
+                                              decoration: TextDecoration.underline,
                                             ),
                                           ),
                                         ),
@@ -294,51 +288,6 @@ class _NagarikLoginPageState extends State<NagarikLoginPage> {
             },
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _inputField({
-    required TextEditingController controller,
-    required String hint,
-    bool obscure = false,
-    Widget? suffix,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withOpacity(0.9),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        style: const TextStyle(fontSize: 13),
-        decoration: InputDecoration(
-          hintText: hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          suffixIcon: suffix,
-        ),
-      ),
-    );
-  }
-
-  Widget _socialIcon({required IconData icon, required Color color}) {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.95),
-      ),
-      child: Icon(
-        icon,
-        color: color,
-        size: 22,
       ),
     );
   }

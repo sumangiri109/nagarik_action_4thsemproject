@@ -1,7 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:nagarik_action_4thsemproject/contact_us.dart';
-import 'signup_page.dart';
-//import 'contact_us.dart';
+
+import 'screens/contact_us.dart';
+import 'screens/signup_page.dart';
 import 'dart:async';
 
 class LandingPage extends StatefulWidget {
@@ -196,17 +197,21 @@ class _LandingPageState extends State<LandingPage> {
           const SizedBox(width: 25),
           _buildNavButton('Contact Us', () {
             Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => ContactPage()),
-  );
+              context,
+              MaterialPageRoute(builder: (context) => ContactPage()),
+            );
           }),
           const SizedBox(width: 25),
-         _buildNavButton('Sign Up', () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => NagarikSignUpPage()),
-  );
-}),
+          _buildNavButton('Sign Up', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NagarikSignUpPage(
+                  firebaseUser: FirebaseAuth.instance.currentUser!,
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -336,7 +341,11 @@ class _LandingPageState extends State<LandingPage> {
             const SizedBox(height: 15),
             const Text(
               'Here is Nagarik action, the platform where you can report the problem in community so that government can take actions.',
-              style: TextStyle(fontSize: 16, color: Colors.black87, height: 1.5),
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 24),
             HoverScaleButton(
@@ -365,7 +374,7 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
- // ✅ FIXED OVERFLOW HERE (ONLY CHANGE)
+  // ✅ FIXED OVERFLOW HERE (ONLY CHANGE)
   Widget _buildStatisticsSection(BuildContext context) {
     return Container(
       height: 256,
@@ -383,22 +392,41 @@ class _LandingPageState extends State<LandingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('Nagarik Action by the Numbers.',
-                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+              Text(
+                'Nagarik Action by the Numbers.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               SizedBox(height: 24),
-              Text('Kathmandu', style: TextStyle(color: Colors.white, fontSize: 22)),
+              Text(
+                'Kathmandu',
+                style: TextStyle(color: Colors.white, fontSize: 22),
+              ),
               SizedBox(height: 12),
-              Text('Pokhara', style: TextStyle(color: Colors.white, fontSize: 22)),
+              Text(
+                'Pokhara',
+                style: TextStyle(color: Colors.white, fontSize: 22),
+              ),
               SizedBox(height: 12),
-              Text('Bhaktapur', style: TextStyle(color: Colors.white, fontSize: 22)),
+              Text(
+                'Bhaktapur',
+                style: TextStyle(color: Colors.white, fontSize: 22),
+              ),
               SizedBox(height: 12),
-              Text('Lalitpur', style: TextStyle(color: Colors.white, fontSize: 22)),
+              Text(
+                'Lalitpur',
+                style: TextStyle(color: Colors.white, fontSize: 22),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
   Widget _buildFooter(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 38, horizontal: 35),

@@ -1,32 +1,31 @@
-// lib/services/storage_service.dart
+// lib/services/storage_service.dart (WEB VERSION)
 
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:path/path.dart' as path;
+import 'package:file_picker/file_picker.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // ============================================================
-  // UPLOAD FILES
+  // UPLOAD FILES (WEB)
   // ============================================================
 
-  /// Upload file and return download URL
-  Future<String> uploadFile({
-    required File file,
+  /// Upload file from bytes and return download URL
+  Future<String> uploadFileFromBytes({
+    required Uint8List fileBytes,
     required String folderPath,
-    String? fileName,
+    required String fileName,
   }) async {
     try {
-      // Generate file name if not provided
-      final String fileNameToUse = fileName ?? 
-          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
-
       // Create reference
-      final Reference ref = _storage.ref().child('$folderPath/$fileNameToUse');
+      final Reference ref = _storage.ref().child('$folderPath/$fileName');
+
+      // Set metadata
+      final metadata = SettableMetadata(contentType: _getContentType(fileName));
 
       // Upload file
-      final UploadTask uploadTask = ref.putFile(file);
+      final UploadTask uploadTask = ref.putData(fileBytes, metadata);
 
       // Wait for upload to complete
       final TaskSnapshot snapshot = await uploadTask;
@@ -41,44 +40,92 @@ class StorageService {
     }
   }
 
-  /// Upload profile image
-  Future<String> uploadProfileImage({
-    required File file,
-    required String userId,
-  }) async {
-    return await uploadFile(
-      file: file,
-      folderPath: 'users/$userId',
-      fileName: 'profile.jpg',
-    );
+  /// Upload profile image (Web)
+  Future<String?> uploadProfileImageWeb({required String userId}) async {
+    try {
+      // Pick file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
+
+      final file = result.files.first;
+      if (file.bytes == null) {
+        throw Exception('No file data');
+      }
+
+      // Upload
+      return await uploadFileFromBytes(
+        fileBytes: file.bytes!,
+        folderPath: 'users/$userId',
+        fileName: 'profile.${file.extension ?? 'jpg'}',
+      );
+    } catch (e) {
+      print('Error uploading profile image: $e');
+      rethrow;
+    }
   }
 
-  /// Upload government certificate
-  Future<String> uploadGovernmentCertificate({
-    required File file,
+  /// Upload government certificate (Web)
+  Future<String?> uploadGovernmentCertificateWeb({
     required String userId,
-  }) async {
-    final String extension = path.extension(file.path);
-    return await uploadFile(
-      file: file,
-      folderPath: 'users/$userId/documents',
-      fileName: 'certificate$extension',
-    );
-  }
-
-  /// Upload issue images
-  Future<List<String>> uploadIssueImages({
-    required List<File> files,
-    required String issueId,
   }) async {
     try {
+      // Pick file (PDF, JPG, PNG)
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
+
+      final file = result.files.first;
+      if (file.bytes == null) {
+        throw Exception('No file data');
+      }
+
+      // Upload
+      return await uploadFileFromBytes(
+        fileBytes: file.bytes!,
+        folderPath: 'users/$userId/documents',
+        fileName: 'certificate.${file.extension ?? 'pdf'}',
+      );
+    } catch (e) {
+      print('Error uploading certificate: $e');
+      rethrow;
+    }
+  }
+
+  /// Upload issue images (Web)
+  Future<List<String>> uploadIssueImagesWeb({required String issueId}) async {
+    try {
+      // Pick multiple images
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return [];
+      }
+
       List<String> urls = [];
 
-      for (int i = 0; i < files.length; i++) {
-        final url = await uploadFile(
-          file: files[i],
+      for (int i = 0; i < result.files.length; i++) {
+        final file = result.files[i];
+        if (file.bytes == null) continue;
+
+        final url = await uploadFileFromBytes(
+          fileBytes: file.bytes!,
           folderPath: 'issues/$issueId',
-          fileName: 'image_$i.jpg',
+          fileName: 'image_$i.${file.extension ?? 'jpg'}',
         );
         urls.add(url);
       }
@@ -90,27 +137,31 @@ class StorageService {
     }
   }
 
-  /// Upload issue attachment
-  Future<String> uploadIssueAttachment({
-    required File file,
-    required String issueId,
-  }) async {
-    return await uploadFile(
-      file: file,
-      folderPath: 'issues/$issueId/attachments',
-    );
-  }
+  /// Upload issue attachment (Web)
+  Future<String?> uploadIssueAttachmentWeb({required String issueId}) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+      );
 
-  /// Upload status update attachment
-  Future<String> uploadStatusUpdateAttachment({
-    required File file,
-    required String issueId,
-    required String updateId,
-  }) async {
-    return await uploadFile(
-      file: file,
-      folderPath: 'statusUpdates/$issueId/$updateId',
-    );
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
+
+      final file = result.files.first;
+      if (file.bytes == null) {
+        throw Exception('No file data');
+      }
+
+      return await uploadFileFromBytes(
+        fileBytes: file.bytes!,
+        folderPath: 'issues/$issueId/attachments',
+        fileName: file.name,
+      );
+    } catch (e) {
+      print('Error uploading attachment: $e');
+      rethrow;
+    }
   }
 
   // ============================================================
@@ -140,68 +191,46 @@ class StorageService {
     }
   }
 
-  /// Delete entire folder
-  Future<void> deleteFolder(String folderPath) async {
-    try {
-      final ListResult result = await _storage.ref(folderPath).listAll();
+  // ============================================================
+  // HELPERS
+  // ============================================================
 
-      // Delete all files in folder
-      for (Reference ref in result.items) {
-        await ref.delete();
-      }
-
-      // Recursively delete subfolders
-      for (Reference ref in result.prefixes) {
-        await deleteFolder(ref.fullPath);
-      }
-    } catch (e) {
-      print('Error deleting folder: $e');
-      rethrow;
+  /// Get content type from file extension
+  String _getContentType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
     }
   }
 
   // ============================================================
-  // GET FILE METADATA
-  // ============================================================
-
-  /// Get file metadata
-  Future<FullMetadata> getFileMetadata(String fileUrl) async {
-    try {
-      final Reference ref = _storage.refFromURL(fileUrl);
-      return await ref.getMetadata();
-    } catch (e) {
-      print('Error getting file metadata: $e');
-      rethrow;
-    }
-  }
-
-  /// Get file size in bytes
-  Future<int?> getFileSize(String fileUrl) async {
-    try {
-      final metadata = await getFileMetadata(fileUrl);
-      return metadata.size;
-    } catch (e) {
-      print('Error getting file size: $e');
-      return null;
-    }
-  }
-
-  // ============================================================
-  // UPLOAD WITH PROGRESS
+  // UPLOAD WITH PROGRESS (WEB)
   // ============================================================
 
   /// Upload file with progress tracking
-  Stream<double> uploadFileWithProgress({
-    required File file,
+  Stream<double> uploadFileWithProgressWeb({
+    required Uint8List fileBytes,
     required String folderPath,
-    String? fileName,
+    required String fileName,
   }) {
     try {
-      final String fileNameToUse = fileName ?? 
-          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
+      final Reference ref = _storage.ref().child('$folderPath/$fileName');
 
-      final Reference ref = _storage.ref().child('$folderPath/$fileNameToUse');
-      final UploadTask uploadTask = ref.putFile(file);
+      final metadata = SettableMetadata(contentType: _getContentType(fileName));
+
+      final UploadTask uploadTask = ref.putData(fileBytes, metadata);
 
       return uploadTask.snapshotEvents.map((TaskSnapshot snapshot) {
         return snapshot.bytesTransferred / snapshot.totalBytes;
