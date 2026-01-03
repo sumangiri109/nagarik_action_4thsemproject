@@ -1,16 +1,16 @@
 // lib/services/auth_service.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nagarik_action_4thsemproject/models/user_models.dart';
-
 import '../models/enums.dart';
 import 'user_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.standard(scopes: ['email']);
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserService _userService = UserService();
 
@@ -27,23 +27,32 @@ class AuthService {
   String? get currentUserId => currentUser?.uid;
 
   // ============================================================
-  // GOOGLE SIGN IN
+  // GOOGLE SIGN IN (WEB VERSION)
   // ============================================================
 
   /// Sign in with Google
   /// Returns the Firebase User if successful, null if cancelled
   Future<User?> signInWithGoogle() async {
     try {
+      debugPrint('Starting Google Sign-In...');
+
       // Trigger the Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser =
+          await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
 
       // If user cancels the sign-in
       if (googleUser == null) {
+        debugPrint('User cancelled Google sign-in');
         return null;
       }
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      debugPrint('Google user obtained: ${googleUser.email}');
+
+      // Obtain the auth details
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      debugPrint('Got authentication tokens');
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -51,13 +60,19 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with the Google credential
-      final UserCredential userCredential = 
-          await _auth.signInWithCredential(credential);
+      debugPrint('Created Firebase credential');
 
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      debugPrint(
+        'Successfully signed in to Firebase: ${userCredential.user?.email}',
+      );
       return userCredential.user;
     } catch (e) {
-      print('Error signing in with Google: $e');
+      debugPrint('Error signing in with Google: $e');
       rethrow;
     }
   }
@@ -70,9 +85,10 @@ class AuthService {
   Future<bool> checkUserExists(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
+      debugPrint('Checking if user exists: $uid - ${doc.exists}');
       return doc.exists;
     } catch (e) {
-      print('Error checking user exists: $e');
+      debugPrint('Error checking user exists: $e');
       return false;
     }
   }
@@ -81,14 +97,16 @@ class AuthService {
   Future<UserModel?> getUserData(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
-      
+
       if (!doc.exists) {
+        debugPrint('User document does not exist for uid: $uid');
         return null;
       }
 
+      debugPrint('Retrieved user data for: $uid');
       return UserModel.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting user data: $e');
+      debugPrint('Error getting user data: $e');
       return null;
     }
   }
@@ -119,6 +137,8 @@ class AuthService {
     String? certificateUrl,
   }) async {
     try {
+      debugPrint('Creating user profile for: $email');
+
       await _userService.createUser(
         uid: uid,
         email: email,
@@ -137,8 +157,10 @@ class AuthService {
         officePhone: officePhone,
         certificateUrl: certificateUrl,
       );
+
+      debugPrint('User profile created successfully');
     } catch (e) {
-      print('Error completing signup: $e');
+      debugPrint('Error completing signup: $e');
       rethrow;
     }
   }
@@ -150,12 +172,10 @@ class AuthService {
   /// Sign out from Firebase and Google
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+      debugPrint('User signed out successfully');
     } catch (e) {
-      print('Error signing out: $e');
+      debugPrint('Error signing out: $e');
       rethrow;
     }
   }
@@ -178,8 +198,10 @@ class AuthService {
 
       // Sign out from Google
       await _googleSignIn.signOut();
+
+      debugPrint('Account deleted successfully');
     } catch (e) {
-      print('Error deleting account: $e');
+      debugPrint('Error deleting account: $e');
       rethrow;
     }
   }
@@ -192,21 +214,24 @@ class AuthService {
   Future<void> reauthenticateWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         throw Exception('Re-authentication cancelled');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
+      // Await the authentication
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       await currentUser?.reauthenticateWithCredential(credential);
+      debugPrint('Re-authentication successful');
     } catch (e) {
-      print('Error re-authenticating: $e');
+      debugPrint('Error re-authenticating: $e');
       rethrow;
     }
   }
@@ -223,7 +248,7 @@ class AuthService {
 
       return await getUserData(uid);
     } catch (e) {
-      print('Error getting current user model: $e');
+      debugPrint('Error getting current user model: $e');
       return null;
     }
   }
@@ -233,13 +258,9 @@ class AuthService {
     final uid = currentUserId;
     if (uid == null) return Stream.value(null);
 
-    return _firestore
-        .collection('users')
-        .doc(uid)
-        .snapshots()
-        .map((doc) {
-          if (!doc.exists) return null;
-          return UserModel.fromJson(doc.data()!);
-        });
+    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return UserModel.fromJson(doc.data()!);
+    });
   }
 }

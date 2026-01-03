@@ -8,6 +8,9 @@ import '../services/auth_service.dart';
 import '../services/storage_service.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
+import 'citizen/citizen_home_screen.dart';
+import 'government/government_home_screen.dart';
+import 'pending_verification_screen.dart';
 
 class NagarikSignUpPage extends StatefulWidget {
   final User firebaseUser;
@@ -194,6 +197,7 @@ class _NagarikSignUpPageState extends State<NagarikSignUpPage> {
       );
 
       if (mounted) {
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -202,12 +206,29 @@ class _NagarikSignUpPageState extends State<NagarikSignUpPage> {
                   : AppConstants.signupSuccess,
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
 
-        // TODO: Navigate to appropriate home screen
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        // Wait for snackbar to show
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Navigate to appropriate screen based on role
+        if (_selectedRole == UserRole.citizen) {
+          // Citizen users go directly to home screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const CitizenHomeScreen()),
+          );
+        } else if (_selectedRole == UserRole.government) {
+          // Government users go to pending verification screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const PendingVerificationScreen(),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
