@@ -21,7 +21,6 @@ class _HomePageState extends State<HomePage> {
   String? selectedPrivacy = 'Public';
   String? filterArea; // For filtering posts by area
   
-  // User profile data
   String userName = 'Bogdan Nikitin';
   String userHandle = '@nikitinteam';
   String userEmail = 'bogdan@example.com';
