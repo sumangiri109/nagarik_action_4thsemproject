@@ -8,23 +8,38 @@ class IssueModel {
   final String title;
   final String description;
   final IssueCategory category;
+
+  // Reporter information
   final String reportedBy;
   final String reporterName;
   final String reporterEmail;
-  final Location location;
+
+  // NEW: Two separate locations
+  final Location issueLocation; // Where the problem actually is
+  final Location reporterRegisteredLocation; // Reporter's home address
+  final bool isReportedFromDifferentDistrict; // Flag for cross-district reports
+
+  // Issue details
   final IssueStatus status;
   final IssuePriority? priority;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? statusUpdatedAt;
   final String? statusUpdatedBy;
+
+  // Media
   final List<String> imageUrls;
   final List<String> attachmentUrls;
+
+  // Engagement metrics
   final int viewsCount;
   final int reactionsCount;
   final int commentsCount;
+
+  // Optional fields
   final List<String> tags;
   final bool isAnonymous;
+  final String? specificLocation; // Additional location details
 
   IssueModel({
     required this.issueId,
@@ -34,7 +49,9 @@ class IssueModel {
     required this.reportedBy,
     required this.reporterName,
     required this.reporterEmail,
-    required this.location,
+    required this.issueLocation,
+    required this.reporterRegisteredLocation,
+    required this.isReportedFromDifferentDistrict,
     required this.status,
     this.priority,
     required this.createdAt,
@@ -48,6 +65,7 @@ class IssueModel {
     this.commentsCount = 0,
     this.tags = const [],
     this.isAnonymous = false,
+    this.specificLocation,
   });
 
   Map<String, dynamic> toJson() {
@@ -59,7 +77,9 @@ class IssueModel {
       'reportedBy': reportedBy,
       'reporterName': reporterName,
       'reporterEmail': reporterEmail,
-      'location': location.toJson(),
+      'issueLocation': issueLocation.toJson(),
+      'reporterRegisteredLocation': reporterRegisteredLocation.toJson(),
+      'isReportedFromDifferentDistrict': isReportedFromDifferentDistrict,
       'status': status.toJson(),
       if (priority != null) 'priority': priority!.toJson(),
       'createdAt': createdAt,
@@ -73,6 +93,7 @@ class IssueModel {
       'commentsCount': commentsCount,
       'tags': tags,
       'isAnonymous': isAnonymous,
+      if (specificLocation != null) 'specificLocation': specificLocation,
     };
   }
 
@@ -85,7 +106,14 @@ class IssueModel {
       reportedBy: json['reportedBy'] as String,
       reporterName: json['reporterName'] as String,
       reporterEmail: json['reporterEmail'] as String,
-      location: Location.fromJson(json['location'] as Map<String, dynamic>),
+      issueLocation: Location.fromJson(
+        json['issueLocation'] as Map<String, dynamic>,
+      ),
+      reporterRegisteredLocation: Location.fromJson(
+        json['reporterRegisteredLocation'] as Map<String, dynamic>,
+      ),
+      isReportedFromDifferentDistrict:
+          json['isReportedFromDifferentDistrict'] as bool? ?? false,
       status: IssueStatus.fromJson(json['status'] as String),
       priority: json['priority'] != null
           ? IssuePriority.fromJson(json['priority'] as String)
@@ -103,6 +131,7 @@ class IssueModel {
       commentsCount: json['commentsCount'] as int? ?? 0,
       tags: List<String>.from(json['tags'] ?? []),
       isAnonymous: json['isAnonymous'] as bool? ?? false,
+      specificLocation: json['specificLocation'] as String?,
     );
   }
 
@@ -114,7 +143,9 @@ class IssueModel {
     String? reportedBy,
     String? reporterName,
     String? reporterEmail,
-    Location? location,
+    Location? issueLocation,
+    Location? reporterRegisteredLocation,
+    bool? isReportedFromDifferentDistrict,
     IssueStatus? status,
     IssuePriority? priority,
     DateTime? createdAt,
@@ -128,6 +159,7 @@ class IssueModel {
     int? commentsCount,
     List<String>? tags,
     bool? isAnonymous,
+    String? specificLocation,
   }) {
     return IssueModel(
       issueId: issueId ?? this.issueId,
@@ -137,7 +169,12 @@ class IssueModel {
       reportedBy: reportedBy ?? this.reportedBy,
       reporterName: reporterName ?? this.reporterName,
       reporterEmail: reporterEmail ?? this.reporterEmail,
-      location: location ?? this.location,
+      issueLocation: issueLocation ?? this.issueLocation,
+      reporterRegisteredLocation:
+          reporterRegisteredLocation ?? this.reporterRegisteredLocation,
+      isReportedFromDifferentDistrict:
+          isReportedFromDifferentDistrict ??
+          this.isReportedFromDifferentDistrict,
       status: status ?? this.status,
       priority: priority ?? this.priority,
       createdAt: createdAt ?? this.createdAt,
@@ -151,6 +188,29 @@ class IssueModel {
       commentsCount: commentsCount ?? this.commentsCount,
       tags: tags ?? this.tags,
       isAnonymous: isAnonymous ?? this.isAnonymous,
+      specificLocation: specificLocation ?? this.specificLocation,
     );
+  }
+
+  // Helper method to get time ago
+  String getTimeAgo() {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inDays > 365) {
+      final years = (difference.inDays / 365).floor();
+      return '$years ${years == 1 ? 'year' : 'years'} ago';
+    } else if (difference.inDays > 30) {
+      final months = (difference.inDays / 30).floor();
+      return '$months ${months == 1 ? 'month' : 'months'} ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays} ${difference.inDays == 1 ? 'day' : 'days'} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} ${difference.inHours == 1 ? 'hour' : 'hours'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} ${difference.inMinutes == 1 ? 'minute' : 'minutes'} ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
