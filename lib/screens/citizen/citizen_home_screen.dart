@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nagarik_action_4thsemproject/models/user_models.dart';
 import '../../models/issue_model.dart';
+import '../../models/comment_model.dart';
 import '../../models/enums.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import 'package:nagarik_action_4thsemproject/services/issue_services.dart';
 import '../../services/reaction_service.dart';
 import '../../services/comment_service.dart';
+import 'report_issue_screen.dart';
 
 class CitizenHomeScreen extends StatefulWidget {
   const CitizenHomeScreen({Key? key}) : super(key: key);
@@ -33,7 +35,6 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
   // UI State
   String selectedTab = 'My Ward'; // 'My Ward', 'My Municipality', 'My District'
   String currentView = 'feed'; // 'feed', 'myPosts', 'settings'
-  bool showCreateReportModal = false;
   bool showNotificationsDropdown = false;
   bool showCommentModal = false;
   String? commentingIssueId;
@@ -105,8 +106,6 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
               _buildRightSidebar(),
             ],
           ),
-
-          if (showCreateReportModal) _buildCreateReportModal(),
 
           if (showNotificationsDropdown) _buildNotificationsDropdown(),
 
@@ -205,7 +204,20 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
               );
             },
           ),
-          _buildMenuItem(Icons.map, 'Map', false),
+          _buildMenuItem(
+            Icons.map,
+            'Map',
+            false,
+            onTap: () {
+              // TODO: Implement map view
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Map feature coming soon!'),
+                  backgroundColor: Color(0xFFFF6B6B),
+                ),
+              );
+            },
+          ),
           _buildMenuItem(
             Icons.add_circle,
             'Add Report',
@@ -259,7 +271,13 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: isAddPost
-            ? () => setState(() => showCreateReportModal = true)
+            ? () {
+                // Navigate to Report Issue Screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReportIssueScreen()),
+                );
+              }
             : onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 5),
@@ -696,6 +714,8 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
   }
 
   Widget _buildImageGallery(List<String> images) {
+    if (images.isEmpty) return const SizedBox.shrink();
+
     if (images.length == 1) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(15),
@@ -704,52 +724,72 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
           height: 200,
           width: double.infinity,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              Container(height: 200, color: Colors.grey.shade300),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              color: Colors.grey.shade200,
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                      : null,
+                  color: const Color(0xFFFF6B6B),
+                ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 200,
+              color: Colors.grey.shade200,
+              child: const Center(
+                child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              ),
+            );
+          },
         ),
       );
     } else if (images.length == 2) {
       return Row(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(images[0], height: 200, fit: BoxFit.cover),
+        children: images.map((url) {
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  url,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      Container(height: 200, color: Colors.grey.shade300),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(images[1], height: 200, fit: BoxFit.cover),
-            ),
-          ),
-        ],
+          );
+        }).toList(),
       );
     } else {
       return Row(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(images[0], height: 200, fit: BoxFit.cover),
+        children: images.take(3).map((url) {
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  url,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      Container(height: 200, color: Colors.grey.shade300),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(images[1], height: 200, fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(images[2], height: 200, fit: BoxFit.cover),
-            ),
-          ),
-        ],
+          );
+        }).toList(),
       );
     }
   }
@@ -1014,9 +1054,93 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
   }
 
   Widget _buildNotificationsDropdown() {
-    return Container(
-      color: Colors.black.withOpacity(0.3),
-      child: const Center(child: Text('Notifications - Coming Soon')),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          showNotificationsDropdown = false;
+        });
+      },
+      child: Container(
+        color: Colors.black.withOpacity(0.3),
+        child: Center(
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when clicking inside
+            child: Container(
+              width: 450,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(25),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Notifications',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFF6B6B),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            showNotificationsDropdown = false;
+                          });
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.notifications_none,
+                          size: 80,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'No notifications yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You\'ll be notified when someone comments\non your reports or updates their status',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

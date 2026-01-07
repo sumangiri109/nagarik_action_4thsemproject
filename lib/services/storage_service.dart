@@ -137,6 +137,26 @@ class StorageService {
     }
   }
 
+  /// Upload single issue image (Web) - for report_issue_screen
+  Future<String?> uploadIssueImage(PlatformFile file, String userId) async {
+    try {
+      if (file.bytes == null) {
+        throw Exception('No file data');
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+      return await uploadFileFromBytes(
+        fileBytes: file.bytes!,
+        folderPath: 'issues/$userId',
+        fileName: 'issue_${timestamp}_${file.name}',
+      );
+    } catch (e) {
+      print('Error uploading issue image: $e');
+      return null;
+    }
+  }
+
   /// Upload issue attachment (Web)
   Future<String?> uploadIssueAttachmentWeb({required String issueId}) async {
     try {
