@@ -540,7 +540,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   Future<void> _submitIssue() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Check if different area requires photos
+    // Check if different district requires photos
     final isDifferentDistrict =
         _locationOption == "Different Area" &&
         _selectedDistrict != currentUser?.location.district;
@@ -560,7 +560,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     setState(() => isSubmitting = true);
 
     try {
-      // Get issue location
+      // --------------------------
+      // Step 1: Prepare issue location
+      // --------------------------
       Location issueLocation;
       if (_locationOption == "My Own Area") {
         issueLocation = currentUser!.location;
@@ -575,21 +577,11 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         );
       }
 
-      // Upload images
-      List<String> imageUrls = [];
-      if (_selectedImages.isNotEmpty) {
-        for (var file in _selectedImages) {
-          final url = await _storageService.uploadIssueImage(
-            file,
-            currentUser!.uid,
-          );
-          if (url != null) imageUrls.add(url);
-        }
-      }
-
-      // Create issue
-      final issue = IssueModel(
-        issueId: '', // Will be set by service
+      // --------------------------
+      // Step 2: Create issue with empty images first
+      // --------------------------
+      final tempIssue = IssueModel(
+        issueId: '', // will be set by service
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         category: _selectedCategory!,
@@ -603,15 +595,47 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         priority: _selectedPriority,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        imageUrls: imageUrls,
+        imageUrls: [], // empty for now
         specificLocation: _specificLocationController.text.trim().isEmpty
             ? null
             : _specificLocationController.text.trim(),
       );
 
-      final issueId = await _issueService.createIssue(issue);
+      // Create issue and get issueId
+      final issueId = await _issueService.createIssue(tempIssue);
+      if (issueId == null) throw Exception('Failed to create issue');
 
-      if (issueId != null && mounted) {
+      // --------------------------
+      // Step 3: Upload images (if any)
+      // --------------------------
+      List<String> imageUrls = [];
+      if (_selectedImages.isNotEmpty) {
+        for (var i = 0; i < _selectedImages.length; i++) {
+          final file = _selectedImages[i];
+          final url = await _storageService.uploadFileFromBytes(
+            fileBytes: file.bytes!,
+            folderPath: 'issues/$issueId',
+            fileName: 'image_$i.${file.extension ?? 'jpg'}',
+          );
+          imageUrls.add(url);
+        }
+      }
+
+      // --------------------------
+      // Step 4: Update issue with image URLs
+      // --------------------------
+      final updatedIssue = tempIssue.copyWith(
+        issueId: issueId,
+        imageUrls: imageUrls,
+        updatedAt: DateTime.now(),
+      );
+
+      await _issueService.updateIssue(updatedIssue);
+
+      // --------------------------
+      // Step 5: Success feedback
+      // --------------------------
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Issue reported successfully!'),
@@ -619,8 +643,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
           ),
         );
         Navigator.pop(context);
-      } else {
-        throw Exception('Failed to create issue');
       }
     } catch (e) {
       if (mounted) {
@@ -629,9 +651,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => isSubmitting = false);
-      }
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 

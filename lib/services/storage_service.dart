@@ -5,60 +5,50 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
 class StorageService {
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  // final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instanceFor(
+    bucket: 'gs://nagarik-action.appspot.com', // Use old bucket
+  );
 
   // ============================================================
-  // UPLOAD FILES (WEB)
+  // UPLOAD FILE FROM BYTES
   // ============================================================
-
-  /// Upload file from bytes and return download URL
   Future<String> uploadFileFromBytes({
     required Uint8List fileBytes,
     required String folderPath,
     required String fileName,
   }) async {
     try {
-      // Create reference
       final Reference ref = _storage.ref().child('$folderPath/$fileName');
 
-      // Set metadata
       final metadata = SettableMetadata(contentType: _getContentType(fileName));
 
-      // Upload file
       final UploadTask uploadTask = ref.putData(fileBytes, metadata);
 
-      // Wait for upload to complete
       final TaskSnapshot snapshot = await uploadTask;
 
-      // Get download URL
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
-
-      return downloadUrl;
+      return await snapshot.ref.getDownloadURL();
     } catch (e) {
       print('Error uploading file: $e');
       rethrow;
     }
   }
 
-  /// Upload profile image (Web)
+  // ============================================================
+  // PROFILE IMAGE
+  // ============================================================
   Future<String?> uploadProfileImageWeb({required String userId}) async {
     try {
-      // Pick file
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
       );
 
-      if (result == null || result.files.isEmpty) {
-        return null;
-      }
+      if (result == null || result.files.isEmpty) return null;
 
       final file = result.files.first;
-      if (file.bytes == null) {
-        throw Exception('No file data');
-      }
+      if (file.bytes == null) throw Exception('No file data');
 
-      // Upload
       return await uploadFileFromBytes(
         fileBytes: file.bytes!,
         folderPath: 'users/$userId',
@@ -70,28 +60,24 @@ class StorageService {
     }
   }
 
-  /// Upload government certificate (Web)
+  // ============================================================
+  // GOVERNMENT CERTIFICATE
+  // ============================================================
   Future<String?> uploadGovernmentCertificateWeb({
     required String userId,
   }) async {
     try {
-      // Pick file (PDF, JPG, PNG)
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
         allowMultiple: false,
       );
 
-      if (result == null || result.files.isEmpty) {
-        return null;
-      }
+      if (result == null || result.files.isEmpty) return null;
 
       final file = result.files.first;
-      if (file.bytes == null) {
-        throw Exception('No file data');
-      }
+      if (file.bytes == null) throw Exception('No file data');
 
-      // Upload
       return await uploadFileFromBytes(
         fileBytes: file.bytes!,
         folderPath: 'users/$userId/documents',
@@ -103,18 +89,17 @@ class StorageService {
     }
   }
 
-  /// Upload issue images (Web)
+  // ============================================================
+  // ISSUE IMAGES (MULTIPLE)
+  // ============================================================
   Future<List<String>> uploadIssueImagesWeb({required String issueId}) async {
     try {
-      // Pick multiple images
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: true,
       );
 
-      if (result == null || result.files.isEmpty) {
-        return [];
-      }
+      if (result == null || result.files.isEmpty) return [];
 
       List<String> urls = [];
 
@@ -137,41 +122,39 @@ class StorageService {
     }
   }
 
-  /// Upload single issue image (Web) - for report_issue_screen
-  Future<String?> uploadIssueImage(PlatformFile file, String userId) async {
+  // ============================================================
+  // SINGLE ISSUE IMAGE (USED IN REPORT SCREEN)
+  // ============================================================
+  Future<String?> uploadIssueImage(PlatformFile file, String issueId) async {
     try {
-      if (file.bytes == null) {
-        throw Exception('No file data');
-      }
+      if (file.bytes == null) throw Exception('No file data');
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
       return await uploadFileFromBytes(
         fileBytes: file.bytes!,
-        folderPath: 'issues/$userId',
+        folderPath: 'issues/$issueId',
         fileName: 'issue_${timestamp}_${file.name}',
       );
     } catch (e) {
-      print('Error uploading issue image: $e');
+      print('Error uploading single issue image: $e');
       return null;
     }
   }
 
-  /// Upload issue attachment (Web)
+  // ============================================================
+  // ISSUE ATTACHMENT
+  // ============================================================
   Future<String?> uploadIssueAttachmentWeb({required String issueId}) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: false,
       );
 
-      if (result == null || result.files.isEmpty) {
-        return null;
-      }
+      if (result == null || result.files.isEmpty) return null;
 
       final file = result.files.first;
-      if (file.bytes == null) {
-        throw Exception('No file data');
-      }
+      if (file.bytes == null) throw Exception('No file data');
 
       return await uploadFileFromBytes(
         fileBytes: file.bytes!,
@@ -179,7 +162,7 @@ class StorageService {
         fileName: file.name,
       );
     } catch (e) {
-      print('Error uploading attachment: $e');
+      print('Error uploading issue attachment: $e');
       rethrow;
     }
   }
@@ -187,8 +170,6 @@ class StorageService {
   // ============================================================
   // DELETE FILES
   // ============================================================
-
-  /// Delete file by URL
   Future<void> deleteFile(String fileUrl) async {
     try {
       final Reference ref = _storage.refFromURL(fileUrl);
@@ -199,7 +180,6 @@ class StorageService {
     }
   }
 
-  /// Delete multiple files
   Future<void> deleteFiles(List<String> fileUrls) async {
     try {
       for (String url in fileUrls) {
@@ -214,8 +194,6 @@ class StorageService {
   // ============================================================
   // HELPERS
   // ============================================================
-
-  /// Get content type from file extension
   String _getContentType(String fileName) {
     final extension = fileName.split('.').last.toLowerCase();
     switch (extension) {
@@ -238,8 +216,6 @@ class StorageService {
   // ============================================================
   // UPLOAD WITH PROGRESS (WEB)
   // ============================================================
-
-  /// Upload file with progress tracking
   Stream<double> uploadFileWithProgressWeb({
     required Uint8List fileBytes,
     required String folderPath,
@@ -247,9 +223,7 @@ class StorageService {
   }) {
     try {
       final Reference ref = _storage.ref().child('$folderPath/$fileName');
-
       final metadata = SettableMetadata(contentType: _getContentType(fileName));
-
       final UploadTask uploadTask = ref.putData(fileBytes, metadata);
 
       return uploadTask.snapshotEvents.map((TaskSnapshot snapshot) {

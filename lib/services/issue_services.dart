@@ -8,6 +8,7 @@ import '../models/location_model.dart';
 
 class IssueService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
 
   // ============================================================
   // CREATE ISSUE
@@ -17,12 +18,12 @@ class IssueService {
     try {
       // Generate new document reference
       final docRef = _firestore.collection('issues').doc();
-      
+
       // Create issue with generated ID
       final issueWithId = issue.copyWith(issueId: docRef.id);
-      
+
       await docRef.set(issueWithId.toJson());
-      
+
       debugPrint('✅ Issue created: ${docRef.id}');
       return docRef.id;
     } catch (e) {
@@ -143,10 +144,10 @@ class IssueService {
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return IssueModel.fromJson(doc.data() as Map<String, dynamic>);
-        }).toList();
-      });
+            return snapshot.docs.map((doc) {
+              return IssueModel.fromJson(doc.data() as Map<String, dynamic>);
+            }).toList();
+          });
     } catch (e) {
       debugPrint('❌ Error getting user issues: $e');
       return Stream.value([]);
@@ -157,7 +158,7 @@ class IssueService {
   Future<IssueModel?> getIssueById(String issueId) async {
     try {
       final doc = await _firestore.collection('issues').doc(issueId).get();
-      
+
       if (doc.exists) {
         return IssueModel.fromJson(doc.data() as Map<String, dynamic>);
       }
@@ -185,7 +186,7 @@ class IssueService {
         'statusUpdatedBy': updatedBy,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       debugPrint('✅ Issue status updated: $issueId');
       return true;
     } catch (e) {
@@ -201,7 +202,7 @@ class IssueService {
           .collection('issues')
           .doc(issue.issueId)
           .update(issue.toJson());
-      
+
       debugPrint('✅ Issue updated: ${issue.issueId}');
       return true;
     } catch (e) {
@@ -261,7 +262,7 @@ class IssueService {
   Future<bool> deleteIssue(String issueId) async {
     try {
       await _firestore.collection('issues').doc(issueId).delete();
-      
+
       debugPrint('✅ Issue deleted: $issueId');
       return true;
     } catch (e) {
@@ -298,7 +299,7 @@ class IssueService {
       }
 
       final snapshot = await query.get();
-      
+
       int notStarted = 0;
       int inProgress = 0;
       int completed = 0;
@@ -306,7 +307,7 @@ class IssueService {
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         final status = data['status'] as String;
-        
+
         if (status == 'not_started') {
           notStarted++;
         } else if (status == 'in_progress') {
@@ -324,12 +325,23 @@ class IssueService {
       };
     } catch (e) {
       debugPrint('❌ Error getting issue counts: $e');
-      return {
-        'notStarted': 0,
-        'inProgress': 0,
-        'completed': 0,
-        'total': 0,
-      };
+      return {'notStarted': 0, 'inProgress': 0, 'completed': 0, 'total': 0};
+    }
+  }
+
+  // Update issue with image URLs
+  Future<bool> updateIssueImages(String issueId, List<String> imageUrls) async {
+    try {
+      await _firestore.collection('issues').doc(issueId).update({
+        'imageUrls': imageUrls,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('✅ Issue images updated: $issueId');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error updating issue images: $e');
+      return false;
     }
   }
 }
