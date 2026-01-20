@@ -713,85 +713,90 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
     );
   }
 
-  Widget _buildImageGallery(List<String> images) {
-    if (images.isEmpty) return const SizedBox.shrink();
+  Widget _buildImageGallery(List<String> imageUrls) {
+    if (imageUrls.isEmpty) return const SizedBox.shrink();
 
-    if (images.length == 1) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Image.network(
-          images[0],
-          height: 200,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Colors.grey.shade200,
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                      : null,
-                  color: const Color(0xFFFF6B6B),
-                ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: imageUrls.length == 1
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.network(
+                imageUrls[0],
+                width: double.infinity,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 250,
+                    color: Colors.grey.shade200,
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  print('Image load error: $error');
+                  return Container(
+                    height: 250,
+                    color: Colors.grey.shade200,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Image not available',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              height: 200,
-              color: Colors.grey.shade200,
-              child: const Center(
-                child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-              ),
-            );
-          },
-        ),
-      );
-    } else if (images.length == 2) {
-      return Row(
-        children: images.map((url) {
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.network(
-                  url,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(height: 200, color: Colors.grey.shade300),
-                ),
-              ),
+            )
+          : ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: imageUrls.length > 3 ? 3 : imageUrls.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 250,
+                  height: 250,
+                  margin: const EdgeInsets.only(right: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Image.network(
+                      imageUrls[index],
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade200,
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.grey.shade400,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        }).toList(),
-      );
-    } else {
-      return Row(
-        children: images.take(3).map((url) {
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.network(
-                  url,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(height: 200, color: Colors.grey.shade300),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      );
-    }
+    );
   }
 
   Future<void> _toggleReaction(IssueModel issue) async {
