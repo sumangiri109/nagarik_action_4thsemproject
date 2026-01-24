@@ -1,6 +1,7 @@
 // lib/models/comment_model.dart
 
 import 'enums.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommentModel {
   final String commentId;
@@ -33,8 +34,8 @@ class CommentModel {
       'userRole': userRole.toJson(),
       if (userProfileImage != null) 'userProfileImage': userProfileImage,
       'text': text,
-      'createdAt': createdAt,
-      if (updatedAt != null) 'updatedAt': updatedAt,
+      'createdAt': Timestamp.fromDate(createdAt),
+      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
       'isEdited': isEdited,
     };
   }
@@ -44,12 +45,12 @@ class CommentModel {
       commentId: json['commentId'] as String,
       userId: json['userId'] as String,
       userName: json['userName'] as String,
-      userRole: UserRole.fromJson(json['userRole'] as String),
+      userRole: UserRole.fromJson(json['userRole']),
       userProfileImage: json['userProfileImage'] as String?,
       text: json['text'] as String,
-      createdAt: (json['createdAt'] as dynamic).toDate(),
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
       updatedAt: json['updatedAt'] != null
-          ? (json['updatedAt'] as dynamic).toDate()
+          ? (json['updatedAt'] as Timestamp).toDate()
           : null,
       isEdited: json['isEdited'] as bool? ?? false,
     );
