@@ -22,6 +22,7 @@ class CitizenHomeScreen extends StatefulWidget {
 
 class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
   // Services
+
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
   final IssueService _issueService = IssueService();
@@ -222,7 +223,12 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
             Icons.add_circle,
             'Add Report',
             false,
-            isAddPost: true,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ReportIssueScreen()),
+              );
+            },
           ),
           _buildMenuItem(
             Icons.post_add,
@@ -264,21 +270,12 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
     IconData icon,
     String title,
     bool isActive, {
-    bool isAddPost = false,
     VoidCallback? onTap,
   }) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: isAddPost
-            ? () {
-                // Navigate to Report Issue Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ReportIssueScreen()),
-                );
-              }
-            : onTap,
+        onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 5),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -1150,9 +1147,385 @@ class _CitizenHomeScreenState extends State<CitizenHomeScreen> {
   }
 
   Widget _buildCommentModal(String issueId) {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: const Center(child: Text('Comments - Coming Soon')),
+    final commentController = TextEditingController();
+    bool isSubmitting = false;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          showCommentModal = false;
+          commentingIssueId = null;
+        });
+      },
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        child: Center(
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when clicking inside
+            child: Container(
+              width: 600,
+              height: 500,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        ShaderMask(
+                          shaderCallback: (bounds) => const LinearGradient(
+                            colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                          ).createShader(bounds),
+                          child: const Icon(
+                            Icons.comment,
+                            size: 28,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Comments',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D3436),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            setState(() {
+                              showCommentModal = false;
+                              commentingIssueId = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+
+                  // Comments List
+                  Expanded(
+                    child: StreamBuilder<List<CommentModel>>(
+                      stream: _commentService.getComments(issueId),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFFF6B6B),
+                            ),
+                          );
+                        }
+
+                        final comments = snapshot.data ?? [];
+
+                        if (comments.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 60,
+                                  color: Colors.grey.shade300,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No comments yet',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Be the first to comment!',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(20),
+                          itemCount: comments.length,
+                          itemBuilder: (context, index) {
+                            final comment = comments[index];
+                            final isGovernment =
+                                comment.userRole == UserRole.government;
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isGovernment
+                                    ? const Color(0xFFE3F2FD)
+                                    : const Color(0xFFFFF3E0).withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isGovernment
+                                      ? const Color(0xFF2196F3).withOpacity(0.3)
+                                      : const Color(
+                                          0xFFFF6B6B,
+                                        ).withOpacity(0.2),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 16,
+                                        backgroundColor: isGovernment
+                                            ? const Color(0xFF2196F3)
+                                            : const Color(0xFFFF6B6B),
+                                        child: Text(
+                                          comment.userName
+                                              .substring(0, 1)
+                                              .toUpperCase(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  comment.userName,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                if (isGovernment) ...[
+                                                  const SizedBox(width: 6),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                        0xFF2196F3,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Government',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            Text(
+                                              _getTimeAgo(comment.createdAt),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    comment.text,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+
+                  const Divider(height: 1),
+
+                  // Add Comment Input
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: StatefulBuilder(
+                      builder: (context, setModalState) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: commentController,
+                                decoration: InputDecoration(
+                                  hintText: 'Write a comment...',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFF6B6B),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                maxLines: 1,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () async {
+                                      if (commentController.text.trim().isEmpty)
+                                        return;
+
+                                      setModalState(() => isSubmitting = true);
+
+                                      final comment = CommentModel(
+                                        commentId: '',
+                                        userId: currentUser!.uid,
+                                        userName: currentUser!.name,
+                                        userRole: currentUser!.role,
+                                        text: commentController.text.trim(),
+                                        createdAt: DateTime.now(),
+                                      );
+
+                                      final success = await _commentService
+                                          .addComment(
+                                            issueId: issueId,
+                                            comment: comment,
+                                          );
+
+                                      if (success != null) {
+                                        commentController.clear();
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                '✅ Comment posted!',
+                                              ),
+                                              backgroundColor: Color(
+                                                0xFF00B894,
+                                              ),
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
+                                        }
+                                      }
+
+                                      setModalState(() => isSubmitting = false);
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF6B6B),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: isSubmitting
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Post',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
