@@ -69,9 +69,7 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (currentUser == null) {
@@ -119,7 +117,11 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.account_balance, color: Colors.white, size: 40),
+            child: const Icon(
+              Icons.account_balance,
+              color: Colors.white,
+              size: 40,
+            ),
           ),
           const SizedBox(height: 10),
           const Text(
@@ -266,23 +268,25 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                   if (mounted) {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const NagarikLoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const NagarikLoginPage(),
+                      ),
                     );
                   }
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: const [
                       Icon(Icons.logout, color: Colors.white, size: 22),
                       SizedBox(width: 12),
                       Text(
                         'Logout',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 15),
                       ),
                     ],
                   ),
@@ -392,31 +396,30 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
     return StreamBuilder<Map<String, int>>(
       stream: _getStatisticsStream(),
       builder: (context, snapshot) {
-        final stats = snapshot.data ?? {
-          'total': 0,
-          'notStarted': 0,
-          'inProgress': 0,
-          'completed': 0,
-        };
+        final stats =
+            snapshot.data ??
+            {'total': 0, 'notStarted': 0, 'inProgress': 0, 'completed': 0};
 
         final total = stats['total'] ?? 0;
         final active = (stats['notStarted'] ?? 0) + (stats['inProgress'] ?? 0);
         final resolved = stats['completed'] ?? 0;
-        final resolutionRate = total > 0 ? ((resolved / total) * 100).toInt() : 0;
+        final resolutionRate = total > 0
+            ? ((resolved / total) * 100).toInt()
+            : 0;
 
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Row(
             children: [
               Expanded(
                 child: _buildStatCard(
-                  'Total Issues',
+                  'Total',
                   total.toString(),
                   Icons.assignment,
                   const Color(0xFFFF6B6B),
                 ),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
                   'Active',
@@ -425,7 +428,7 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                   Colors.orange,
                 ),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
                   'Resolved',
@@ -434,10 +437,10 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                   Colors.green,
                 ),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  'Resolution Rate',
+                  'Rate',
                   '$resolutionRate%',
                   Icons.trending_up,
                   Colors.blue,
@@ -453,71 +456,74 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
   Stream<Map<String, int>> _getStatisticsStream() {
     return _issueService
         .getIssuesForGovernment(
-      district: currentUser!.location.district,
-      municipality: currentUser!.location.municipality,
-      ward: currentUser!.location.ward,
-    )
+          district: currentUser!.location.district,
+          municipality: currentUser!.location.municipality,
+          ward: currentUser!.location.ward,
+        )
         .map((issues) {
-      int notStarted = 0;
-      int inProgress = 0;
-      int completed = 0;
+          int notStarted = 0;
+          int inProgress = 0;
+          int completed = 0;
 
-      for (var issue in issues) {
-        switch (issue.status) {
-          case IssueStatus.not_started:
-            notStarted++;
-            break;
-          case IssueStatus.in_progress:
-            inProgress++;
-            break;
-          case IssueStatus.completed:
-            completed++;
-            break;
-        }
-      }
+          for (var issue in issues) {
+            switch (issue.status) {
+              case IssueStatus.not_started:
+                notStarted++;
+                break;
+              case IssueStatus.in_progress:
+                inProgress++;
+                break;
+              case IssueStatus.completed:
+                completed++;
+                break;
+            }
+          }
 
-      return {
-        'total': issues.length,
-        'notStarted': notStarted,
-        'inProgress': inProgress,
-        'completed': completed,
-      };
-    });
+          return {
+            'total': issues.length,
+            'notStarted': notStarted,
+            'inProgress': inProgress,
+            'completed': completed,
+          };
+        });
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -680,7 +686,8 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => _sendEmail(issue.reporterEmail, issue.title),
+                    onPressed: () =>
+                        _sendEmail(issue.reporterEmail, issue.title),
                     child: const Text('Email', style: TextStyle(fontSize: 12)),
                   ),
                 ],
@@ -703,15 +710,10 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                 children: [
                   const Text(
                     'Status:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildStatusDropdown(issue),
-                  ),
+                  Expanded(child: _buildStatusDropdown(issue)),
                 ],
               ),
             ),
@@ -722,11 +724,20 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                _buildEngagementStat(Icons.visibility, issue.viewsCount.toString()),
+                _buildEngagementStat(
+                  Icons.visibility,
+                  issue.viewsCount.toString(),
+                ),
                 const SizedBox(width: 20),
-                _buildEngagementStat(Icons.favorite, issue.reactionsCount.toString()),
+                _buildEngagementStat(
+                  Icons.favorite,
+                  issue.reactionsCount.toString(),
+                ),
                 const SizedBox(width: 20),
-                _buildEngagementStat(Icons.comment, issue.commentsCount.toString()),
+                _buildEngagementStat(
+                  Icons.comment,
+                  issue.commentsCount.toString(),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () => _showCommentModal(issue),
@@ -806,7 +817,10 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
     }
   }
 
-  Future<void> _updateIssueStatus(IssueModel issue, IssueStatus newStatus) async {
+  Future<void> _updateIssueStatus(
+    IssueModel issue,
+    IssueStatus newStatus,
+  ) async {
     final success = await _issueService.updateIssueStatus(
       issueId: issue.issueId,
       newStatus: newStatus,
@@ -876,11 +890,18 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.broken_image, size: 50, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           'Image not available',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -906,13 +927,18 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                           if (loadingProgress == null) return child;
                           return Container(
                             color: Colors.grey.shade200,
-                            child: const Center(child: CircularProgressIndicator()),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           );
                         },
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey.shade200,
-                            child: Icon(Icons.broken_image, color: Colors.grey.shade400),
+                            child: Icon(
+                              Icons.broken_image,
+                              color: Colors.grey.shade400,
+                            ),
                           );
                         },
                       ),
@@ -943,23 +969,21 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
       ),
       child: Text(
         category.displayName,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   Widget _buildEngagementStat(IconData icon, String count) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: Colors.grey.shade600),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: Colors.grey.shade600),
+        const SizedBox(width: 3),
         Text(
           count,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             color: Colors.grey.shade700,
             fontWeight: FontWeight.w500,
           ),
@@ -986,10 +1010,7 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
           const SizedBox(height: 8),
           Text(
             'Issues reported in Ward ${currentUser?.location.ward} will appear here',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -1076,7 +1097,8 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                       itemCount: comments.length,
                       itemBuilder: (context, index) {
                         final comment = comments[index];
-                        final isGovernment = comment.userRole == UserRole.government;
+                        final isGovernment =
+                            comment.userRole == UserRole.government;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -1099,10 +1121,13 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 14,
-                                    backgroundColor:
-                                        isGovernment ? Colors.blue : Colors.grey,
+                                    backgroundColor: isGovernment
+                                        ? Colors.blue
+                                        : Colors.grey,
                                     child: Text(
-                                      comment.userName.substring(0, 1).toUpperCase(),
+                                      comment.userName
+                                          .substring(0, 1)
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -1112,7 +1137,8 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -1126,10 +1152,11 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                                             if (isGovernment) ...[
                                               const SizedBox(width: 6),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 2,
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue,
                                                   borderRadius:

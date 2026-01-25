@@ -7,7 +7,7 @@ import 'package:file_picker/file_picker.dart';
 class StorageService {
   // final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseStorage _storage = FirebaseStorage.instanceFor(
-    bucket: 'gs://nagarik-action.appspot.com', // Use old bucket
+    bucket: 'gs://nagarik-action.firebasestorage.app', // Use old bucket
   );
 
   // ============================================================
