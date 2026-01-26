@@ -87,6 +87,16 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
     );
   }
 
+  // right sidebar for space
+
+  Widget _buildRightSpacer() {
+    return Container(
+      width: 200, // Same width as citizen's filter sidebar
+      margin: const EdgeInsets.all(30),
+      // Empty container - just takes up space
+    );
+  }
+
   // ============================================================
   // LEFT SIDEBAR
   // ============================================================
@@ -308,7 +318,14 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
       children: [
         _buildTopBar(),
         _buildStatisticsSection(),
-        Expanded(child: _buildIssuesFeed()),
+        Expanded(
+          child: Row(
+            children: [
+              Expanded(child: _buildIssuesFeed()),
+              _buildRightSpacer(), // Space only for the feed
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -568,38 +585,39 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
 
   Widget _buildIssueCard(IssueModel issue) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header - Compact
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 20,
+                  radius: 18,
                   backgroundColor: const Color(0xFFFF6B6B).withOpacity(0.2),
                   child: Text(
                     issue.reporterName.substring(0, 1).toUpperCase(),
                     style: const TextStyle(
                       color: Color(0xFFFF6B6B),
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,14 +626,14 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                         issue.reporterName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                          fontSize: 14,
                         ),
                       ),
                       Text(
                         _getTimeAgo(issue.createdAt),
                         style: TextStyle(
                           color: Colors.grey.shade600,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -626,125 +644,174 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
             ),
           ),
 
-          // Title & Description
+          // Title & Description - Compact
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   issue.title,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   issue.description,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.grey.shade700,
-                    height: 1.4,
+                    height: 1.3,
                   ),
-                  maxLines: 3,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
 
-          // Images
+          // Images - SAME SIZE AS CITIZEN HOME PAGE
           if (issue.imageUrls.isNotEmpty) ...[
-            const SizedBox(height: 15),
+            const SizedBox(height: 2),
             _buildImageGallery(issue.imageUrls),
           ],
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 4),
 
-          // Reporter Contact
+          // Reporter Contact - Compact
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue.shade200, width: 0.5),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.email, size: 16, color: Colors.blue.shade700),
-                  const SizedBox(width: 8),
+                  Icon(Icons.email, size: 14, color: Colors.blue.shade700),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       issue.reporterEmail,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: Colors.blue.shade900,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   TextButton(
                     onPressed: () =>
                         _sendEmail(issue.reporterEmail, issue.title),
-                    child: const Text('Email', style: TextStyle(fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Email', style: TextStyle(fontSize: 11)),
                   ),
                 ],
               ),
             ),
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
 
-          // Status Update Section
+          // Status Update & Actions - All in one row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Text(
-                    'Status:',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildStatusDropdown(issue)),
-                ],
-              ),
-            ),
-          ),
-
-          // Engagement Stats & Comments
-          Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
+                // Status Dropdown - Compact
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: DropdownButton<IssueStatus>(
+                      value: issue.status,
+                      underline: const SizedBox(),
+                      isExpanded: true,
+                      isDense: true,
+                      items: IssueStatus.values.map((status) {
+                        return DropdownMenuItem(
+                          value: status,
+                          child: Row(
+                            children: [
+                              _getStatusIcon(status),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  status.displayName,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: _getStatusColor(status),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (newStatus) {
+                        if (newStatus != null && newStatus != issue.status) {
+                          _updateIssueStatus(issue, newStatus);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Engagement Stats - Compact
                 _buildEngagementStat(
                   Icons.visibility,
                   issue.viewsCount.toString(),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 10),
                 _buildEngagementStat(
                   Icons.favorite,
                   issue.reactionsCount.toString(),
                 ),
-                const SizedBox(width: 20),
-                _buildEngagementStat(
-                  Icons.comment,
-                  issue.commentsCount.toString(),
-                ),
-                const Spacer(),
+                const SizedBox(width: 10),
+
+                // Comments Button
                 TextButton.icon(
                   onPressed: () => _showCommentModal(issue),
-                  icon: const Icon(Icons.comment_outlined, size: 18),
-                  label: const Text('View Comments'),
+                  icon: const Icon(Icons.comment_outlined, size: 14),
+                  label: Text(
+                    '${issue.commentsCount}',
+                    style: const TextStyle(fontSize: 11),
+                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFFFF6B6B),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
               ],
@@ -867,7 +934,7 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
     if (imageUrls.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
       child: imageUrls.length == 1
           ? ClipRRect(
               borderRadius: BorderRadius.circular(15),
@@ -878,14 +945,14 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    height: 250,
+                    height: 100,
                     color: Colors.grey.shade200,
                     child: const Center(child: CircularProgressIndicator()),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    height: 250,
+                    height: 200,
                     color: Colors.grey.shade200,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -910,13 +977,13 @@ class _GovernmentHomeScreenState extends State<GovernmentHomeScreen> {
               ),
             )
           : SizedBox(
-              height: 250,
+              height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: imageUrls.length > 3 ? 3 : imageUrls.length,
                 itemBuilder: (context, index) {
                   return Container(
-                    width: 250,
+                    width: 200,
                     margin: const EdgeInsets.only(right: 10),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
